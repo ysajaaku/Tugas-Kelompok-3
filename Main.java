@@ -30,7 +30,7 @@ public class Main {
                     break;
                 case 0:
                     berjalan = false;
-                    System.out.println("Terima kasih telah menggunakan Sistem Manajemen TR.");
+                    System.out.println("Terima kasih telah menggunakan Sistem Stock.");
                     break;
                 default:
                     System.out.println("Pilihan tidak valid. Silakan coba lagi.\n");
@@ -172,20 +172,20 @@ public class Main {
             int stokBaru = Integer.parseInt(scanner.nextLine());
             produk.setStock(stokBaru);
             System.out.println("Stok produk " + produk.getName() + " berhasil diperbarui menjadi " + stokBaru + ".");
-        } catch (ProductNotFoundException e) {
+        } catch (NotFoundException e) {
             System.out.println("Gagal memperbarui stok: " + e.getMessage());
         } catch (NumberFormatException e) {
             System.out.println("Jumlah stok harus berupa angka.");
         }
     }
 
-    private static Product cariProdukById(String id) throws ProductNotFoundException {
+    private static Product cariProdukById(String id) throws NotFoundException {
         for (Product p : daftarProduk) {
             if (p.getId().equalsIgnoreCase(id)) {
                 return p;
             }
         }
-        throw new ProductNotFoundException("Produk dengan ID " + id + " tidak ditemukan.");
+        throw new NotFoundException("Produk dengan ID " + id + " tidak ditemukan.");
     }
 
 
@@ -217,7 +217,7 @@ public class Main {
                 transaksi.tambahItem(new transactionitem(produk, jumlah));
                 System.out.println(produk.getName() + " x" + jumlah + " ditambahkan ke keranjang.");
 
-            } catch (ProductNotFoundException e) {
+            } catch (NotFoundException e) {
                 System.out.println("Gagal menambahkan item: " + e.getMessage());
             } catch (NumberFormatException e) {
                 System.out.println("Jumlah beli harus berupa angka.");
@@ -358,7 +358,7 @@ public class Main {
             try {
                 Product p = cariProdukById(idProdukUnik.get(i));
                 System.out.println((i + 1) + ". " + p.getName() + " - " + totalTerjual.get(i) + " unit terjual");
-            } catch (ProductNotFoundException e) {
+            } catch (NotFoundException e) {
                 System.out.println((i + 1) + ". [Produk tidak ditemukan] - " + totalTerjual.get(i) + " unit terjual");
             }
         }
