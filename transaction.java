@@ -36,6 +36,57 @@ public class transaction {
         items.add(item);
     }
 
+    /**
+     * Menghitung berapa unit sebuah produk yang sudah ada di dalam keranjang.
+     * Dipakai untuk mengecek sisa stok yang masih boleh dibeli.
+     */
+    public int getJumlahDiKeranjang(String idProduk) {
+        int total = 0;
+        for (transactionitem item : items) {
+            if (item.getProduct().getId().equalsIgnoreCase(idProduk)) {
+                total += item.getQuantity();
+            }
+        }
+        return total;
+    }
+
+    /**
+     * Menghapus seluruh item dengan ID produk tertentu dari keranjang.
+     *
+     * @return true bila ada item yang terhapus
+     */
+    public boolean hapusItem(String idProduk) {
+        boolean adaYangDihapus = false;
+        for (int i = items.size() - 1; i >= 0; i--) {
+            if (items.get(i).getProduct().getId().equalsIgnoreCase(idProduk)) {
+                items.remove(i);
+                adaYangDihapus = true;
+            }
+        }
+        return adaYangDihapus;
+    }
+
+    /**
+     * Memotong stok seluruh produk di keranjang.
+     *
+     * Method ini hanya dipanggil setelah pembayaran dikonfirmasi, sehingga
+     * transaksi yang dibatalkan tidak mengurangi stok. Seluruh item diperiksa
+     * lebih dulu sebelum satu pun stok dipotong, agar tidak terjadi kondisi
+     * setengah jadi bila ada produk yang stoknya ternyata tidak cukup.
+     */
+    public void potongStok() {
+        for (transactionitem item : items) {
+            Product produk = item.getProduct();
+            if (getJumlahDiKeranjang(produk.getId()) > produk.getStock()) {
+                throw new IllegalArgumentException("Stok tidak cukup untuk produk "
+                        + produk.getName() + ". Sisa stok: " + produk.getStock());
+            }
+        }
+        for (transactionitem item : items) {
+            item.getProduct().kurangiStok(item.getQuantity());
+        }
+    }
+
     public double hitungSubtotalKotor() {
         double total = 0;
         for (transactionitem item : items) {

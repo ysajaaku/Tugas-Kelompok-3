@@ -195,17 +195,40 @@ public class Main {
 
         boolean tambahLagi = true;
         while (tambahLagi) {
-            System.out.print("Masukkan ID produk (atau ketik 'selesai' untuk mengakhiri): ");
-            String idProduk = scanner.nextLine();
+            System.out.println("\nKetik ID produk untuk menambah item, 'hapus' untuk menghapus item,");
+            System.out.print("'selesai' untuk lanjut membayar, atau 'batal' untuk membatalkan: ");
+            String idProduk = scanner.nextLine().trim();
+
+            if (idProduk.equalsIgnoreCase("batal")) {
+                System.out.println("Transaksi dibatalkan. Stok tidak berubah.");
+                return;
+            }
 
             if (idProduk.equalsIgnoreCase("selesai")) {
                 tambahLagi = false;
                 continue;
             }
 
+            if (idProduk.equalsIgnoreCase("hapus")) {
+                hapusItemKeranjang(transaksi);
+                continue;
+            }
+
+            if (idProduk.isEmpty()) {
+                continue;
+            }
+
             try {
                 Product produk = cariProdukById(idProduk);
-                System.out.print("Masukkan jumlah beli: ");
+
+                // Stok yang masih boleh dibeli = stok gudang dikurangi yang sudah di keranjang.
+                int tersedia = produk.getStock() - transaksi.getJumlahDiKeranjang(produk.getId());
+                if (tersedia <= 0) {
+                    System.out.println("Seluruh stok " + produk.getName() + " sudah ada di keranjang.");
+                    continue;
+                }
+
+                System.out.print("Masukkan jumlah beli (tersedia " + tersedia + "): ");
                 int jumlah = Integer.parseInt(scanner.nextLine());
 
                 if (jumlah <= 0) {
@@ -213,7 +236,12 @@ public class Main {
                     continue;
                 }
 
-                produk.kurangiStok(jumlah); // melempar IllegalArgumentException jika stok tidak cukup
+                if (jumlah > tersedia) {
+                    System.out.println("Jumlah melebihi stok yang tersedia (" + tersedia + ").");
+                    continue;
+                }
+
+                // Stok belum dipotong di sini, hanya dicatat ke keranjang.
                 transaksi.tambahItem(new transactionitem(produk, jumlah));
                 System.out.println(produk.getName() + " x" + jumlah + " ditambahkan ke keranjang.");
 
@@ -221,8 +249,6 @@ public class Main {
                 System.out.println("Gagal menambahkan item: " + e.getMessage());
             } catch (NumberFormatException e) {
                 System.out.println("Jumlah beli harus berupa angka.");
-            } catch (IllegalArgumentException e) {
-                System.out.println("Gagal menambahkan item: " + e.getMessage());
             }
         }
 
@@ -232,7 +258,19 @@ public class Main {
         }
 
         String metodeBayar = pilihMetodePembayaran();
+        if (metodeBayar == null) {
+            System.out.println("Transaksi dibatalkan. Stok tidak berubah.");
+            return;
+        }
         transaksi.setPaymentMethod(metodeBayar);
+
+        try {
+            // Stok baru benar-benar dipotong di sini, setelah pembayaran dipilih.
+            transaksi.potongStok();
+        } catch (IllegalArgumentException e) {
+            System.out.println("Transaksi gagal diproses: " + e.getMessage());
+            return;
+        }
 
         daftarTransaksi.add(transaksi);
         counterTransaksi++;
@@ -240,11 +278,34 @@ public class Main {
         transaksi.cetakStruk();
     }
 
+    private static void hapusItemKeranjang(transaction transaksi) {
+        if (transaksi.getItems().isEmpty()) {
+            System.out.println("Keranjang masih kosong.");
+            return;
+        }
+
+        System.out.println("Isi keranjang saat ini:");
+        for (transactionitem item : transaksi.getItems()) {
+            System.out.println(item.getProduct().getId() + " | " + item);
+        }
+
+        System.out.print("Masukkan ID produk yang ingin dihapus: ");
+        String idProduk = scanner.nextLine().trim();
+
+        if (transaksi.hapusItem(idProduk)) {
+            System.out.println("Item berhasil dihapus dari keranjang.");
+        } else {
+            System.out.println("Produk tersebut tidak ada di keranjang.");
+        }
+    }
+
+    /** Mengembalikan metode pembayaran, atau null bila transaksi dibatalkan. */
     private static String pilihMetodePembayaran() {
         while (true) {
             System.out.println("Pilih metode pembayaran:");
             System.out.println("1. Tunai");
             System.out.println("2. Transfer");
+            System.out.println("0. Batalkan transaksi");
             System.out.print("Pilihan: ");
             int pilihan = bacaPilihanMenu();
 
@@ -253,6 +314,8 @@ public class Main {
                     return "TUNAI";
                 case 2:
                     return "TRANSFER";
+                case 0:
+                    return null;
                 default:
                     System.out.println("Pilihan tidak valid, silakan ulangi.");
             }
