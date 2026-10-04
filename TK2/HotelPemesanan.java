@@ -1,4 +1,3 @@
-// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
 import java.io.PrintStream;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;

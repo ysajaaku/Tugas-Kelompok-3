@@ -142,8 +142,7 @@ public class TravelApp {
     public ArrayList<Pemesanan> getReservations() {
         return reservations;
     }
-
-    // Membuat nomor acak, diulang sampai tidak bentrok dengan nomor yang sudah ada
+    
     private int createUniqueConfirmationNumber() {
         int nomor = NumberGenerator.generate();
         while (isNumberUsed(nomor)) {

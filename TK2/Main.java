@@ -104,7 +104,6 @@ public class Main {
             System.out.println("Pemesanan berhasil!");
             hasil.display();
         } catch (IllegalArgumentException e) {
-            // e.getMessage() berisi teks yang kita tulis saat "throw" di TravelApp
             System.out.println("Gagal: " + e.getMessage());
         }
     }
